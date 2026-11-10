@@ -1,26 +1,148 @@
 @import "tailwindcss";
 
+/* Design tokens — white, soft and feminine without being sugary. The clothes supply the colour. */
+@theme {
+  --color-paper: #ffffff;
+  --color-ink: #1b1517;
+  --color-ink-soft: #453b3e;
+  --color-muted: #746a6c;
+  --color-line: #ece4e1;
+  --color-mist: #f9f4f1;
+  --color-blush: #f4e4e2;
+  --color-accent: #8b2f4b;
+  --color-ok: #3f6b4f;
+  --color-warn: #9a6a12;
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-display), ui-serif, Georgia, serif;
+
+  --text-display: clamp(2.75rem, 6vw + 1rem, 6.25rem);
+  --text-display--line-height: 0.98;
+  --text-display--letter-spacing: -0.02em;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  /* Cormorant defaults to old-style figures, where 1 reads as I. Prices need lining figures. */
+  font-feature-settings: "lnum" 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 3px;
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-8 lg:px-12;
+  }
+  .eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-[0.18em] text-muted;
+  }
+  .link-underline {
+    @apply underline decoration-ink/25 underline-offset-[6px] transition-colors duration-200 hover:text-accent hover:decoration-accent;
+  }
+  /* Navigation links: a hairline that draws in from the left on hover. */
+  .nav-link {
+    @apply relative whitespace-nowrap text-ink-soft transition-colors duration-200 hover:text-ink;
+    background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat;
+    padding-bottom: 3px;
+    transition: background-size 0.3s var(--ease-soft), color 0.2s;
+  }
+  .nav-link:hover {
+    background-size: 100% 1px;
+  }
+  .btn-primary {
+    @apply inline-flex h-12 whitespace-nowrap items-center justify-center gap-2 rounded-full bg-ink px-7 text-sm font-medium tracking-wide text-paper transition-[background-color,transform] duration-200 hover:bg-accent active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-ink disabled:opacity-40 disabled:active:scale-100;
+  }
+  .btn-sm {
+    @apply inline-flex h-9 whitespace-nowrap items-center justify-center rounded-full border border-ink/15 bg-paper px-4 text-xs font-medium transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .btn-sm-primary {
+    @apply inline-flex h-9 whitespace-nowrap items-center justify-center rounded-full bg-ink px-4 text-xs font-medium text-paper transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium;
+  }
+  .field-input {
+    @apply block w-full rounded-lg border border-ink/15 bg-paper px-3.5 py-2.5 text-sm transition-colors placeholder:text-muted/70 hover:border-ink/40 focus:border-ink focus:outline-none;
+  }
+  .field-error {
+    @apply mt-1.5 text-xs text-accent;
+  }
+  .card {
+    @apply rounded-2xl border border-line bg-paper p-5 sm:p-7;
+  }
+  .btn-ghost {
+    @apply inline-flex h-12 whitespace-nowrap items-center justify-center gap-2 rounded-full border border-ink/15 px-7 text-sm font-medium tracking-wide transition-[border-color,transform] duration-200 hover:border-ink active:scale-[0.98];
+  }
+}
+
+/* One calm entrance on first paint. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.9s var(--ease-soft) both;
+}
+.rise-1 { animation-delay: 0.08s; }
+.rise-2 { animation-delay: 0.16s; }
+.rise-3 { animation-delay: 0.24s; }
+
+/* The bag count pops once when something is added. */
+@keyframes bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.bump {
+  animation: bump 0.4s var(--ease-soft);
+}
+
+/* Toast: slides up from the bottom edge. */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.toast-in {
+  animation: toast-in 0.35s var(--ease-soft) both;
+}
+
+/* Horizontal snap gallery with hidden scrollbar. */
+.snap-gallery {
+  scrollbar-width: none;
+}
+.snap-gallery::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
