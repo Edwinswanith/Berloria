@@ -5,7 +5,8 @@ Two flows:
 
 - **Customers:** sign in or create an account (the first screen every visitor sees) → shop with search,
   category, size and price filters → bag → checkout (address, payment) → order confirmation → My orders.
-  Pay online through Razorpay (once keys are added) or cash on delivery.
+  Nothing is paid at checkout for now: the order alerts staff with the customer's phone and email, the team calls to
+  confirm and agree payment, then marks it received. Razorpay online payment switches on once keys are added.
 - **Staff (`/admin`):** sales dashboard, orders (confirm → pack → ship with tracking → delivered, or cancel),
   products with stock per size, and the **photo studio** that turns phone photos into shop images with Google Gemini.
 
@@ -31,7 +32,7 @@ npm run dev     # http://localhost:3000
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | The one staff login for `/admin` |
 | `SESSION_SECRET` | 32+ random characters; signs the staff session cookie (`openssl rand -base64 48`) |
 | `GEMINI_API_KEY` | Google Gemini key for the photo studio. **Empty = sample mode** (results are labelled samples) |
-| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Razorpay keys for online payment. **Empty = cash on delivery only** |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Razorpay keys for online payment. **Empty = pay after the team confirms** |
 | `GEMINI_IMAGE_MODEL`, `GEMINI_IMAGE_SIZE` | Optional overrides (defaults: `gemini-nano-banana-2.1`, `2K`) |
 
 Never commit `.env.local` or paste keys into chat or code.

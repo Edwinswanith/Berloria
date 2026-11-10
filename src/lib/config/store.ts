@@ -4,8 +4,6 @@ export const STORE = {
   freeDeliveryFrom: 199_900,
   /** Used only if the store record has no delivery lane configured. */
   fallbackDeliveryFee: 7_900,
-  /** Cash on delivery is offered up to this order total. */
-  codLimit: 1_000_000,
 } as const;
 
 export const INDIAN_STATES = [

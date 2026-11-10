@@ -11,7 +11,7 @@ export function SiteHeader() {
     <>
       <p className="bg-ink px-4 py-2 text-center text-[11px] tracking-[0.12em] text-paper/85 uppercase">
         <span className="sm:hidden">Free delivery over ₹1,999 · Prices incl. GST</span>
-        <span className="hidden sm:inline">Free delivery over ₹1,999 · Across India in 3–6 days · Cash on delivery available</span>
+        <span className="hidden sm:inline">Free delivery over ₹1,999 · Across India in 3–6 days · Pay after we confirm your order</span>
       </p>
       <header className="sticky top-0 z-40 border-b border-line/80 bg-paper/90 backdrop-blur-md">
         <div className="container-page grid h-[4.5rem] grid-cols-[1fr_auto_1fr] items-center gap-4">

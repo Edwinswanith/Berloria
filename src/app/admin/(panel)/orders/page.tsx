@@ -8,6 +8,7 @@ export const metadata: Metadata = { title: "Orders" };
 
 const FILTERS: { key: OrderFilter; label: string }[] = [
   { key: "all", label: "All" },
+  { key: "new", label: "New, to call" },
   { key: "to-fulfil", label: "To pack & ship" },
   { key: "shipped", label: "Shipped" },
   { key: "delivered", label: "Delivered" },

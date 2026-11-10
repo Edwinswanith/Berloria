@@ -28,7 +28,7 @@ const OrderSchema = new Schema(
     fxSnapshot: { type: Map, of: Number, default: {} },
     eta: EtaSchema,
     payment: {
-      provider: { type: String, enum: ["razorpay", "cod", "mock"], default: "mock" },
+      provider: { type: String, enum: ["razorpay", "manual", "cod", "mock"], default: "mock" },
       status: { type: String, enum: PAYMENT_STATUSES, default: "pending" },
       providerOrderId: String,
       providerPaymentId: String,

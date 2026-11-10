@@ -94,7 +94,7 @@ export function BagView() {
           <Link href="/checkout" className="btn-primary mt-6 w-full">Checkout</Link>
         )}
         {shown.hasIssues && <p className="mt-3 text-center text-xs text-accent">Fix the items marked above to continue.</p>}
-        <p className="mt-4 text-center text-xs text-muted">Pay by UPI, card or netbanking, or cash on delivery.</p>
+        <p className="mt-4 text-center text-xs text-muted">Nothing to pay now. We call to confirm your order and agree payment.</p>
       </aside>
     </div>
   );

@@ -27,8 +27,8 @@ const SECTIONS = [
     id: "payment",
     title: "Payment",
     body: [
-      "Pay online by UPI, card, netbanking or wallet through Razorpay, or choose cash on delivery and pay the courier when your parcel arrives.",
-      "All prices include GST. Your card and UPI details are entered on Razorpay's secure page and never stored by us.",
+      "There is nothing to pay when you place an order. Our team calls or messages you on the mobile number you gave to confirm the order and agree how you'd like to pay: UPI, bank transfer or cash.",
+      "All prices include GST. We never ask for card numbers, PINs or OTPs over the phone.",
     ],
   },
   {

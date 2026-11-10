@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ToContactList } from "@/components/admin/contact-bits";
 import { OrderList } from "@/components/admin/order-bits";
 import { getDashboard } from "@/lib/admin/orders";
 import { requireAdmin } from "@/lib/auth/admin";
@@ -11,7 +12,7 @@ const shortDay = (date: string): string => new Intl.DateTimeFormat("en-IN", { da
 
 export default async function Dashboard() {
   await requireAdmin();
-  const { sales, toFulfil, unpaid, recent, lowStock } = await getDashboard();
+  const { sales, toContact, toFulfil, unpaid, recent, lowStock } = await getDashboard();
   const peak = Math.max(1, ...sales.daily.map((d) => d.revenue));
 
   return (
@@ -23,6 +24,8 @@ export default async function Dashboard() {
         </div>
         <Link href="/admin/products/new" className="btn-primary">Add a dress</Link>
       </div>
+
+      {toContact.length > 0 && <ToContactList orders={toContact} />}
 
       <dl className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4" data-testid="sales-stats">
         {[

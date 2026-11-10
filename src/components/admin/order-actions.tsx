@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { updateOrderAction, type ActionState } from "@/app/admin/actions";
+import { markPaidAction, updateOrderAction, type ActionState } from "@/app/admin/actions";
 
 const initial: ActionState = {};
 const STEP_LABEL: Record<string, string> = { accepted: "Confirm order", packed: "Mark as packed", shipped: "Mark as shipped", delivered: "Mark as delivered" };
@@ -68,5 +68,18 @@ export function OrderActions({ id, nextSteps, blockedByPayment }: OrderActionsPr
       )}
       {state.error && <p role="alert" className="field-error mt-3">{state.error}</p>}
     </div>
+  );
+}
+
+/** Payment is agreed with the customer directly, so staff record it by hand once the money is in. */
+export function PaymentReceived({ id, amount }: { id: string; amount: string }) {
+  const [state, action, pending] = useActionState(markPaidAction, initial);
+  return (
+    <form action={action} className="mt-4 rounded-lg bg-mist px-4 py-3 text-sm" data-testid="payment-state">
+      <input type="hidden" name="id" value={id} />
+      <p>Collect <strong className="font-medium">{amount}</strong> from the customer (UPI, bank transfer or cash).</p>
+      <button type="submit" disabled={pending} className="btn-sm mt-3">{pending ? "Saving…" : "Mark payment received"}</button>
+      {state.error && <p role="alert" className="field-error">{state.error}</p>}
+    </form>
   );
 }

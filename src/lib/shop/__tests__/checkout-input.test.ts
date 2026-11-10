@@ -3,7 +3,7 @@ import { normalisePhone, parseCheckout } from "../checkout-input";
 
 const valid = {
   name: "Asha Rao", email: " Asha@Example.com ", phone: "98400 12345", line1: "12, 3rd Cross Street", line2: "", city: "Chennai",
-  state: "Tamil Nadu", postalCode: "600017", paymentMethod: "cod", expectedTotal: 249900, items: [{ sku: "MWD-M", qty: 1 }],
+  state: "Tamil Nadu", postalCode: "600017", paymentMethod: "manual", expectedTotal: 249900, items: [{ sku: "MWD-M", qty: 1 }],
 };
 
 describe("normalisePhone", () => {

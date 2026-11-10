@@ -4,13 +4,12 @@ import { connection } from "next/server";
 import { connectDb } from "@/lib/db/connect";
 import { Counter, Order, Product, Shipment } from "@/lib/db/models";
 import { BRAND } from "@/lib/config/brand";
-import { STORE } from "@/lib/config/store";
 import { logError } from "@/lib/log";
 import type { CheckoutInput } from "./checkout-input";
 import { quoteBag, type BagQuote } from "./quote";
 import { createPaymentOrder, razorpayKeys, verifyPaymentSignature } from "./razorpay";
 
-export type CheckoutErrorCode = "bag_changed" | "total_changed" | "payment_unavailable" | "cod_unavailable" | "not_found" | "payment_invalid";
+export type CheckoutErrorCode = "bag_changed" | "total_changed" | "payment_unavailable" | "not_found" | "payment_invalid";
 
 /** A problem the shopper can act on. `quote` carries the fresh bag when it changed under them. */
 export class CheckoutError extends Error {
@@ -64,14 +63,13 @@ export const isOnlinePaymentEnabled = (): boolean => razorpayKeys() !== null;
 
 export async function placeOrder(input: CheckoutInput, userId: string): Promise<PlacedOrder> {
   const keys = razorpayKeys();
-  if (input.paymentMethod === "online" && !keys) throw new CheckoutError("payment_unavailable", "Online payment isn't available right now. Please choose cash on delivery.");
+  if (input.paymentMethod === "online" && !keys) throw new CheckoutError("payment_unavailable", "Online payment isn't available right now. Please place the order and our team will arrange payment with you.");
 
   const quote = await quoteBag(input.items);
   if (quote.hasIssues || quote.itemCount === 0 || !quote.storeId) {
     throw new CheckoutError("bag_changed", "Some items in your bag have changed. Please review your bag.", quote);
   }
   if (quote.total !== input.expectedTotal) throw new CheckoutError("total_changed", "The total has changed since you opened checkout. Please check the new total.", quote);
-  if (input.paymentMethod === "cod" && quote.total > STORE.codLimit) throw new CheckoutError("cod_unavailable", "Cash on delivery isn't available for orders this large. Please pay online.");
 
   const lines = quote.lines.map((l) => ({ productId: l.productId, sku: l.sku, quantity: l.quantity }));
   if (!(await reserveStock(lines))) {
@@ -88,7 +86,7 @@ export async function placeOrder(input: CheckoutInput, userId: string): Promise<
     const order = await Order.create({
       orderNumber, accessKey, userId, contact: { name: input.name, email: input.email, phone: input.phone }, shippingAddress,
       currency: "INR", subtotal: quote.subtotal, shipping: quote.shipping, gst: quote.gst, total: quote.total, eta: quote.delivery,
-      payment: { provider: input.paymentMethod === "online" ? "razorpay" : "cod", status: "pending", providerOrderId },
+      payment: { provider: input.paymentMethod === "online" ? "razorpay" : "manual", status: "pending", providerOrderId },
     });
     await Shipment.create({
       orderId: order._id, orderNumber, vendorId: quote.storeId, shippingAddress, currency: "INR",
@@ -142,7 +140,7 @@ export interface OrderView {
   gst: number;
   total: number;
   eta: { minDays: number; maxDays: number } | null;
-  payment: { method: "online" | "cod"; status: string; providerOrderId: string | null };
+  payment: { method: "online" | "manual"; status: string; providerOrderId: string | null };
 }
 
 export async function getOrderView(orderNumber: string, accessKey: string): Promise<OrderView | null> {
@@ -165,6 +163,6 @@ export async function getOrderView(orderNumber: string, accessKey: string): Prom
     lines: (shipment?.lines ?? []).map((l) => ({ title: l.title, variantLabel: l.variantLabel ?? "", image: l.image ?? "/products/placeholder.svg", quantity: l.quantity, lineTotal: l.lineTotal })),
     subtotal: order.subtotal, shipping: order.shipping, gst: order.gst, total: order.total,
     eta: order.eta?.minDays != null && order.eta.maxDays != null ? { minDays: order.eta.minDays, maxDays: order.eta.maxDays } : null,
-    payment: { method: order.payment?.provider === "razorpay" ? "online" : "cod", status: order.payment?.status ?? "pending", providerOrderId: order.payment?.providerOrderId ?? null },
+    payment: { method: order.payment?.provider === "razorpay" ? "online" : "manual", status: order.payment?.status ?? "pending", providerOrderId: order.payment?.providerOrderId ?? null },
   };
 }

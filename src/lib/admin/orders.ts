@@ -4,6 +4,7 @@ import { assertAdmin } from "@/lib/auth/admin";
 import { LOW_STOCK_THRESHOLD } from "@/lib/data/catalog-shared";
 import { connectDb } from "@/lib/db/connect";
 import { Order, Product, Shipment } from "@/lib/db/models";
+import { needsContact } from "@/lib/domain/contact";
 import { deriveOrderStatus, nextStatuses, transitionShipment, type ShipmentState, type ShipmentStatus } from "@/lib/domain/fulfillment";
 import { summariseSales, type SalesSummary } from "@/lib/domain/sales";
 import { releaseStock } from "@/lib/shop/orders";
@@ -17,11 +18,13 @@ export interface AdminOrderRow {
   orderNumber: string;
   placedAt: string;
   customer: string;
+  phone: string;
+  email: string;
   city: string;
   itemCount: number;
   total: number;
   status: ShipmentStatus;
-  payment: { method: "online" | "cod"; status: string };
+  payment: { method: "online" | "manual"; status: string };
 }
 
 export interface AdminOrderDetail extends AdminOrderRow {
@@ -43,7 +46,7 @@ async function ready(): Promise<void> {
   await connectDb();
 }
 
-const methodOf = (provider?: string | null): "online" | "cod" => (provider === "razorpay" ? "online" : "cod");
+const methodOf = (provider?: string | null): "online" | "manual" => (provider === "razorpay" ? "online" : "manual");
 
 interface Joined {
   order: Awaited<ReturnType<typeof loadOrders>>[number];
@@ -67,6 +70,8 @@ function toRow({ order, shipment }: Joined): AdminOrderRow {
     orderNumber: order.orderNumber,
     placedAt: new Date(shipment.placedAt).toISOString(),
     customer: order.contact?.name ?? "",
+    phone: order.contact?.phone ?? "",
+    email: order.contact?.email ?? "",
     city: order.shippingAddress.city,
     itemCount: shipment.lines.reduce((n, l) => n + l.quantity, 0),
     total: order.total,
@@ -77,12 +82,13 @@ function toRow({ order, shipment }: Joined): AdminOrderRow {
 
 const awaitingOnlinePayment = (row: AdminOrderRow): boolean => row.payment.method === "online" && row.payment.status !== "paid" && row.status !== "cancelled";
 
-export type OrderFilter = "all" | "to-fulfil" | "shipped" | "delivered" | "cancelled" | "unpaid";
+export type OrderFilter = "all" | "new" | "to-fulfil" | "shipped" | "delivered" | "cancelled" | "unpaid";
 
 export async function listAdminOrders(filter: OrderFilter = "all"): Promise<AdminOrderRow[]> {
   await ready();
   const rows = (await joined()).map(toRow);
   switch (filter) {
+    case "new": return rows.filter(needsContact);
     case "to-fulfil": return rows.filter((r) => OPEN.includes(r.status) && !awaitingOnlinePayment(r));
     case "unpaid": return rows.filter(awaitingOnlinePayment);
     case "shipped": case "delivered": case "cancelled": return rows.filter((r) => r.status === filter);
@@ -101,7 +107,7 @@ export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null
   const blockedByPayment = awaitingOnlinePayment(row);
   return {
     ...row,
-    contact: { name: order.contact?.name ?? "", email: order.contact?.email ?? "", phone: order.contact?.phone ?? "" },
+    contact: { name: row.customer, email: row.email, phone: row.phone },
     address: { line1: a.line1, line2: a.line2 ?? "", city: a.city, state: a.state, postalCode: a.postalCode },
     lines: shipment.lines.map((l) => ({ title: l.title, sku: l.sku, variantLabel: l.variantLabel ?? "", image: l.image ?? "/products/placeholder.svg", quantity: l.quantity, lineTotal: l.lineTotal })),
     subtotal: order.subtotal, shipping: order.shipping, gst: order.gst,
@@ -154,15 +160,30 @@ export async function updateOrderStatus(id: string, change: StatusChange): Promi
   if (result.modifiedCount !== 1) throw new AdminError("Someone else just updated this order. Refresh the page.");
 
   if (change.to === "cancelled") await releaseStock(shipment.lines.map((l) => ({ productId: String(l.productId), sku: l.sku, quantity: l.quantity })));
-  const collected = change.to === "delivered" && order.payment?.provider === "cod" && order.payment.status !== "paid";
-  await Order.updateOne(
-    { _id: order._id },
-    { $set: { status: deriveOrderStatus([next.status]), ...(collected ? { "payment.status": "paid", "payment.paidAt": new Date() } : {}) } },
-  );
+  await Order.updateOne({ _id: order._id }, { $set: { status: deriveOrderStatus([next.status]) } });
+}
+
+/** Staff record a payment they collected themselves (UPI, bank transfer or cash). */
+export async function markOrderPaid(id: string): Promise<void> {
+  await ready();
+  if (!isValidObjectId(id)) throw new AdminError("That order doesn't exist.");
+  const order = await Order.findById(id).lean();
+  if (!order) throw new AdminError("That order doesn't exist.");
+  if (order.payment?.provider === "razorpay") throw new AdminError("Online payments are confirmed by Razorpay, not by hand.");
+  if (order.status === "cancelled") throw new AdminError("This order was cancelled.");
+  await Order.updateOne({ _id: id, "payment.status": { $ne: "paid" } }, { $set: { "payment.status": "paid", "payment.paidAt": new Date() } });
+}
+
+/** How many new orders are waiting for a call. Shown on the Orders tab. */
+export async function countOrdersToContact(): Promise<number> {
+  await ready();
+  return (await joined({ status: "placed" })).map(toRow).filter(needsContact).length;
 }
 
 export interface Dashboard {
   sales: SalesSummary;
+  /** New orders the team still has to ring, oldest first. */
+  toContact: AdminOrderRow[];
   toFulfil: number;
   unpaid: number;
   recent: AdminOrderRow[];
@@ -196,6 +217,7 @@ export async function getDashboard(): Promise<Dashboard> {
 
   return {
     sales,
+    toContact: rows.filter(needsContact).reverse(),
     toFulfil: rows.filter((r) => OPEN.includes(r.status) && !awaitingOnlinePayment(r)).length,
     unpaid: rows.filter(awaitingOnlinePayment).length,
     recent: rows.slice(0, 6),

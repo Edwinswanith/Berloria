@@ -18,7 +18,7 @@ export function StatusPill({ status }: { status: string }) {
 }
 
 export function paymentLabel(payment: AdminOrderRow["payment"]): string {
-  if (payment.method === "cod") return payment.status === "paid" ? "COD · collected" : "Cash on delivery";
+  if (payment.method === "manual") return payment.status === "paid" ? "Payment received" : "Payment to arrange";
   return payment.status === "paid" ? "Paid online" : "Online · not paid";
 }
 

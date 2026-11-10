@@ -2,7 +2,7 @@ import { z } from "zod";
 import { INDIAN_STATES } from "@/lib/config/store";
 import { sanitizeItems, type BagItem } from "@/lib/domain/bag";
 
-export const PAYMENT_METHODS = ["online", "cod"] as const;
+export const PAYMENT_METHODS = ["online", "manual"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 /** Accepts "98400 12345", "+91 9840012345", "09840012345" and stores +919840012345. */

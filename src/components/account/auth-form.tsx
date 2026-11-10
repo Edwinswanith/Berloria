@@ -15,7 +15,10 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const errors = state.fieldErrors ?? {};
   const other = isSignUp ? "/login" : "/signup";
 
-  /** Submitted by hand so a failed attempt keeps what was typed. */
+  /**
+   * Submitted by hand so a failed attempt keeps what was typed. The form still names the server action,
+   * so a click before the page has finished loading posts securely instead of putting the password in the URL.
+   */
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -26,7 +29,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
   return (
     <>
-      <form onSubmit={submit} noValidate className="mt-6 space-y-4">
+      <form action={action} onSubmit={submit} noValidate className="mt-6 space-y-4">
         <input type="hidden" name="next" value={next} />
         {isSignUp && (
           <div>

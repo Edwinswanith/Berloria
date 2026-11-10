@@ -28,16 +28,15 @@ interface CheckoutResponse {
 const orderUrl = (orderNumber: string, accessKey: string, flag: string) => `/orders/${orderNumber}?key=${accessKey}&${flag}=1`;
 
 interface CheckoutFormProps {
-  codLimit: number;
   /** From the signed-in account. */
   customer: { name: string; email: string };
 }
 
-export function CheckoutForm({ codLimit, customer }: CheckoutFormProps) {
+export function CheckoutForm({ customer }: CheckoutFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const { quote, lastQuote, isEmpty, onlinePayment, error: quoteError } = useBagQuote();
-  const [method, setMethod] = useState<"online" | "cod" | null>(null);
+  const [method, setMethod] = useState<"online" | "manual" | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -65,8 +64,7 @@ export function CheckoutForm({ codLimit, customer }: CheckoutFormProps) {
     );
   }
 
-  const codAllowed = !shown || shown.total <= codLimit;
-  const chosen = method ?? (onlinePayment ? "online" : "cod");
+  const chosen = method ?? (onlinePayment ? "online" : "manual");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -123,11 +121,11 @@ export function CheckoutForm({ codLimit, customer }: CheckoutFormProps) {
   const hint = (name: string) => errors[name] && <p id={`${name}-error`} className="field-error">{errors[name]}</p>;
 
   return (
-    <form ref={formRef} onSubmit={submit} noValidate className="grid gap-10 lg:grid-cols-[1fr_24rem] lg:gap-16">
+    <form ref={formRef} method="post" onSubmit={submit} noValidate className="grid gap-10 lg:grid-cols-[1fr_24rem] lg:gap-16">
       <div className="space-y-10">
         <fieldset>
           <legend className="font-serif text-3xl">Contact</legend>
-          <p className="mt-1 text-sm text-muted">We&rsquo;ll send your order updates here.</p>
+          <p className="mt-1 text-sm text-muted">Our team will call or message you on these details to confirm your order.</p>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label htmlFor="name" className="field-label">Full name</label>
@@ -187,8 +185,8 @@ export function CheckoutForm({ codLimit, customer }: CheckoutFormProps) {
               <PaymentOption value="online" checked={chosen === "online"} onChange={setMethod} title="Pay online" detail="UPI, cards, netbanking and wallets through Razorpay." />
             )}
             <PaymentOption
-              value="cod" checked={chosen === "cod"} onChange={setMethod} disabled={!codAllowed} title="Cash on delivery"
-              detail={codAllowed ? "Pay the courier in cash or by UPI when your parcel arrives." : `Not available for orders above ${formatMoney(codLimit, "INR")}.`}
+              value="manual" checked={chosen === "manual"} onChange={setMethod} title="Pay after we confirm"
+              detail="Nothing to pay now. Our team will call or message you to confirm the order and agree how you'd like to pay: UPI, bank transfer or cash."
             />
           </div>
           {hint("paymentMethod")}
@@ -223,23 +221,23 @@ export function CheckoutForm({ codLimit, customer }: CheckoutFormProps) {
             {message ?? quoteError} {shown?.hasIssues && <Link href="/bag" className="underline underline-offset-4">Review bag</Link>}
           </p>
         )}
-        <button type="submit" className="btn-primary mt-5 w-full" disabled={!quote || quote.hasIssues || busy || (chosen === "cod" && !codAllowed)}>
+        <button type="submit" className="btn-primary mt-5 w-full" disabled={!quote || quote.hasIssues || busy}>
           <LockIcon className="h-4 w-4" />
           {busy ? "Placing your order…" : chosen === "online" ? `Pay ${quote ? formatMoney(quote.total, "INR") : ""}` : "Place order"}
         </button>
-        <p className="mt-3 text-center text-xs text-muted">Your details are used only to deliver this order.</p>
+        <p className="mt-3 text-center text-xs text-muted">Your details are used only to confirm and deliver this order.</p>
       </aside>
     </form>
   );
 }
 
 interface PaymentOptionProps {
-  value: "online" | "cod";
+  value: "online" | "manual";
   checked: boolean;
   disabled?: boolean;
   title: string;
   detail: string;
-  onChange: (value: "online" | "cod") => void;
+  onChange: (value: "online" | "manual") => void;
 }
 
 function PaymentOption({ value, checked, disabled, title, detail, onChange }: PaymentOptionProps) {

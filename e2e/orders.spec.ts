@@ -76,7 +76,8 @@ test.describe("Customer: bag and checkout", () => {
     await page.goto("/checkout");
     await expect(page.getByTestId("summary-total")).toHaveText("₹1,869");
     await page.getByRole("button", { name: "Place order" }).click();
-    await expect(page.getByText("Enter your full name")).toBeVisible();
+    await expect(page.getByLabel("Full name"), "the name comes from the account").toHaveValue("Priya Test");
+    await expect(page.getByText("Enter your house number and street")).toBeVisible();
     await expect(page.getByText("Enter a 10-digit Indian mobile number")).toBeVisible();
     await expect(page.getByText("Enter a 6-digit PIN code")).toBeVisible();
     await expect(page.locator("#state-error")).toHaveText("Choose your state");
@@ -90,17 +91,18 @@ test.describe("Customer: bag and checkout", () => {
 test.describe("Order: from checkout to delivery", () => {
   test.skip(!EMAIL || !PASSWORD, "ADMIN_EMAIL / ADMIN_PASSWORD are not set in .env.local");
 
-  test("customer orders with cash on delivery, staff ship it, customer tracks it", async ({ page, consoleErrors }, testInfo) => {
+  test("customer orders, staff call and ship it, customer tracks it", async ({ page, consoleErrors }, testInfo) => {
     test.setTimeout(120_000);
     await addToBag(page, "jasmine-shirt-dress", "L");
     await page.goto("/checkout");
     await fillCheckout(page, `Priya ${testInfo.project.name}`);
-    await expect(page.getByLabel("Cash on delivery")).toBeChecked();
+    await expect(page.getByLabel("Pay after we confirm")).toBeChecked();
     const orderNumber = await placeOrder(page);
     const orderUrl = page.url();
     expect(orderUrl).toContain("key=");
     await expect(page.getByRole("heading", { name: /Thank you, Priya/ })).toBeVisible();
-    await expect(page.getByTestId("payment-summary")).toContainText("Cash on delivery — ₹2,190");
+    await expect(page.getByTestId("contact-notice")).toContainText("+919840012345");
+    await expect(page.getByTestId("payment-summary")).toContainText("₹2,190 to pay. Our team will contact you");
     await expect(page.getByTestId("order-progress").locator('[aria-current="step"]')).toContainText("Order placed");
     await expectNoHorizontalScroll(page);
 
@@ -120,15 +122,25 @@ test.describe("Order: from checkout to delivery", () => {
     consoleErrors.length = 0; // the not-found response logs a 404 in the browser console
 
     // Staff: confirm → pack → ship → deliver.
+    // Staff are told about the new order, with the customer's phone number and email.
     await signIn(page);
-    await page.getByRole("navigation", { name: "Admin" }).getByRole("link", { name: "Orders" }).click();
+    const alert = page.getByTestId("to-contact").getByRole("listitem").filter({ hasText: orderNumber });
+    await expect(alert.getByRole("link", { name: "Call +919840012345" })).toHaveAttribute("href", "tel:+919840012345");
+    await expect(alert.getByRole("link", { name: "WhatsApp" })).toHaveAttribute("href", /wa\.me\/919840012345/);
+    await expect(alert).toContainText("@berloria.example");
+    await expect(page.getByTestId("orders-badge").filter({ visible: true })).toBeVisible();
+    await page.goto("/admin/orders?show=new");
     await page.getByRole("link", { name: new RegExp(orderNumber) }).click();
     await expect(page.getByRole("heading", { name: orderNumber })).toBeVisible();
-    await expect(page.getByText("Collect ₹2,190 in cash on delivery.")).toBeVisible();
+    await expect(page.getByTestId("call-customer").filter({ visible: true })).toContainText("Call Priya to confirm");
+    await expect(page.getByText("Collect ₹2,190 from the customer")).toBeVisible();
     await expectNoHorizontalScroll(page);
 
     await page.getByRole("button", { name: "Confirm order" }).click();
     await expect(orderStatus(page)).toHaveText("Confirmed");
+    await expect(page.getByTestId("call-customer"), "confirming clears the call reminder").toHaveCount(0);
+    await page.getByRole("button", { name: "Mark payment received" }).click();
+    await expect(page.getByText("Payment received.")).toBeVisible();
     await page.getByRole("button", { name: "Mark as packed" }).click();
     await expect(orderStatus(page)).toHaveText("Packed");
     await page.getByRole("button", { name: "Mark as shipped" }).click();
@@ -147,7 +159,7 @@ test.describe("Order: from checkout to delivery", () => {
     await page.goto(adminUrl);
     await page.getByRole("button", { name: "Mark as delivered" }).click();
     await expect(orderStatus(page)).toHaveText("Delivered");
-    await expect(page.getByText("COD · collected")).toBeVisible();
+    await expect(page.getByText(/Payment received/).first()).toBeVisible();
     await expect(page.getByTestId("order-actions")).toHaveCount(0);
     await expect(page.getByTestId("order-history").getByRole("listitem")).toHaveCount(5);
   });

@@ -21,7 +21,7 @@ sizes each) to customers in India. Two jobs matter most:
 | Photos | Staff upload 1–3 photos (front required; back, side). Gemini generates six shots; staff approve each one. |
 | Honesty | AI photos are reviewed against the real garment before publishing; product pages say when photos are AI-assisted. |
 | Staff login | One shared login from environment variables, signed 12-hour session cookie. Per-person accounts later. |
-| Payments | Razorpay (UPI, cards, netbanking) when keys are set, plus cash on delivery up to ₹10,000. Nothing is marked paid without a verified Razorpay signature. |
+| Payments | Until Razorpay keys are set, orders are "pay after we confirm": new orders appear on the admin dashboard and Orders tab badge with call / WhatsApp / email links, staff confirm by phone and record the payment by hand. Razorpay (UPI, cards, netbanking) when keys are set. Nothing is marked paid without a verified Razorpay signature. |
 | Accounts | Visitors sign in or create an account first (email + password, scrypt-hashed), then land on the shop. `/help` stays public. Controlled in `src/proxy.ts`. |
 | Checkout | For signed-in shoppers: name, email, mobile, address. The bag lives in the browser (SKUs and quantities only); every price, stock level and total is recomputed on the server. |
 | Delivery | Flat ₹79, free from ₹1,999 (`src/lib/config/store.ts`). |
@@ -78,7 +78,7 @@ Money is always integer paise. Domain rules (pricing, GST, order status, stock s
 ```
 bag (browser) → POST /api/bag/quote → POST /api/checkout
   validate → re-price → reserve stock (atomic per size) → Order + Shipment
-  cash on delivery: done        online: Razorpay popup → POST /api/checkout/verify (signature check) → paid
+  pay after confirm: done       online: Razorpay popup → POST /api/checkout/verify (signature check) → paid
 staff: placed → accepted → packed → shipped (courier + tracking) → delivered     any open step → cancelled (stock returned)
 ```
 

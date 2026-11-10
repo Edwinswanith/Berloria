@@ -11,7 +11,7 @@ import { formatMoney } from "@/lib/domain/money";
 const PROMISES = [
   { Icon: ScissorsIcon, title: "Made with care", body: "Breathable cottons, soft rayons and silks, cut and finished by our own tailors in Chennai." },
   { Icon: RulerIcon, title: "Sizes XS to XXL", body: "Every style is measured flat before it ships. The size guide lists real garment measurements." },
-  { Icon: TruckIcon, title: "Delivered in 3–6 days", body: "Tracked courier anywhere in India. Free delivery over ₹1,999, and cash on delivery if you prefer." },
+  { Icon: TruckIcon, title: "Delivered in 3–6 days", body: "Tracked courier anywhere in India. Free delivery over ₹1,999. We call to confirm every order before it ships." },
 ] as const;
 
 export default function HomePage() {

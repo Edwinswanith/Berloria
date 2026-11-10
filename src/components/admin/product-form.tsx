@@ -52,7 +52,7 @@ export function ProductForm({ values }: { values: ProductFormValues }) {
     : "Enter the price customers pay, GST included.";
 
   return (
-    <form onSubmit={submit} className="space-y-6" noValidate>
+    <form action={action} onSubmit={submit} className="space-y-6" noValidate>
       {values.id && <input type="hidden" name="id" value={values.id} />}
       <input type="hidden" name="sized" value={String(sized)} />
 

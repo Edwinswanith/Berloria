@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { OrderActions } from "@/components/admin/order-actions";
+import { ContactLinks } from "@/components/admin/contact-bits";
+import { OrderActions, PaymentReceived } from "@/components/admin/order-actions";
 import { StatusPill, formatDateTime, paymentLabel, statusLabel } from "@/components/admin/order-bits";
 import { getAdminOrder } from "@/lib/admin/orders";
 import { requireAdmin } from "@/lib/auth/admin";
+import { needsContact } from "@/lib/domain/contact";
 import { formatMoney } from "@/lib/domain/money";
 
 export const metadata: Metadata = { title: "Order" };
@@ -25,6 +27,16 @@ export default async function OrderDetailPage(props: PageProps<"/admin/orders/[i
         </div>
         <p className="mt-1 text-sm text-muted">Placed {formatDateTime(order.placedAt)} · {paymentLabel(order.payment)}</p>
       </div>
+
+      {needsContact(order) && (
+        <section className="rounded-2xl border border-accent/30 bg-blush/50 p-5 sm:p-7" aria-labelledby="call-heading" data-testid="call-customer">
+          <h2 id="call-heading" className="font-serif text-2xl">Call {order.contact.name.split(" ")[0]} to confirm</h2>
+          <p className="mt-1 mb-4 text-sm text-ink-soft">
+            Nothing has been paid yet. Confirm the order, agree how they&rsquo;ll pay {formatMoney(order.total, "INR")}, then press Confirm order below.
+          </p>
+          <ContactLinks orderNumber={order.orderNumber} customer={order.contact.name} phone={order.contact.phone} email={order.contact.email} />
+        </section>
+      )}
 
       <OrderActions key={order.status} id={order.id} nextSteps={order.nextSteps} blockedByPayment={order.blockedByPayment} />
 
@@ -50,8 +62,10 @@ export default async function OrderDetailPage(props: PageProps<"/admin/orders/[i
             <div className="flex justify-between"><dt className="text-muted">Delivery</dt><dd className="tabular-nums">{order.shipping === 0 ? "Free" : formatMoney(order.shipping, "INR")}</dd></div>
             <div className="flex justify-between font-medium"><dt>Total (incl. {formatMoney(order.gst, "INR")} GST)</dt><dd className="tabular-nums">{formatMoney(order.total, "INR")}</dd></div>
           </dl>
-          {order.payment.method === "cod" && order.payment.status !== "paid" && order.status !== "cancelled" && (
-            <p className="mt-4 rounded-lg bg-mist px-4 py-3 text-sm">Collect <strong className="font-medium">{formatMoney(order.total, "INR")}</strong> in cash on delivery.</p>
+          {order.payment.method === "manual" && order.status !== "cancelled" && (
+            order.payment.status === "paid"
+              ? <p className="mt-4 rounded-lg bg-ok/10 px-4 py-3 text-sm text-ok" data-testid="payment-state">Payment received.</p>
+              : <PaymentReceived id={order.id} amount={formatMoney(order.total, "INR")} />
           )}
         </section>
 

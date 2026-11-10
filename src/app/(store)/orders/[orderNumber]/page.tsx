@@ -57,6 +57,12 @@ async function OrderContent({ params, searchParams }: Pick<PageProps<"/orders/[o
             Your order <strong className="font-medium text-ink">{order.orderNumber}</strong> is in. You can follow it any time under{" "}
             <Link href="/account" className="link-underline">My orders</Link>.
           </p>
+          {order.payment.method === "manual" && (
+            <p className="mt-5 max-w-xl rounded-2xl bg-blush px-5 py-4 text-sm text-ink-soft" data-testid="contact-notice">
+              <strong className="font-medium text-ink">What happens next:</strong> our team will call or message you on{" "}
+              <strong className="font-medium text-ink">{order.contact.phone}</strong> (or write to {order.contact.email}) to confirm your order and agree payment and delivery. There is nothing to pay right now.
+            </p>
+          )}
         </header>
       ) : (
         <header className="mb-10">
@@ -120,8 +126,8 @@ async function OrderContent({ params, searchParams }: Pick<PageProps<"/orders/[o
           <div className="rounded-2xl border border-line p-5 text-sm">
             <h2 className="font-serif text-2xl">Payment</h2>
             <p className="mt-3 text-ink-soft" data-testid="payment-summary">
-              {order.payment.method === "cod"
-                ? order.payment.status === "paid" ? "Paid on delivery." : `Cash on delivery — ${formatMoney(order.total, "INR")} due when it arrives.`
+              {order.payment.method === "manual"
+                ? order.payment.status === "paid" ? "Payment received. Thank you." : `${formatMoney(order.total, "INR")} to pay. Our team will contact you to arrange it.`
                 : order.payment.status === "paid" ? "Paid online." : "Online payment not completed."}
             </p>
           </div>

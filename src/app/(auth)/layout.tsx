@@ -12,7 +12,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <p className="font-serif text-6xl leading-[1.02]">Made for her, <em className="text-accent">every day.</em></p>
           <p className="mt-6 max-w-sm leading-relaxed text-ink-soft">{BRAND.description}</p>
         </div>
-        <p className="text-xs tracking-[0.14em] text-ink-soft uppercase">Free delivery over ₹1,999 · Cash on delivery available</p>
+        <p className="text-xs tracking-[0.14em] text-ink-soft uppercase">Free delivery over ₹1,999 · Pay after we confirm your order</p>
       </aside>
       <main className="flex flex-col items-center justify-center px-5 py-12">
         <div className="mb-10 lg:hidden"><Logo /></div>

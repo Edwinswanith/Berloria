@@ -10,7 +10,7 @@ import {
   AdminError, createProduct, deleteProduct, makeGalleryImageFirst, removeGalleryImage,
   removeSourcePhoto, reviewCandidate, setProductStatus, updateProduct,
 } from "@/lib/admin/products";
-import { updateOrderStatus } from "@/lib/admin/orders";
+import { markOrderPaid, updateOrderStatus } from "@/lib/admin/orders";
 import { SOURCE_VIEWS, type SourceView } from "@/lib/db/models";
 import { SHIPMENT_STATUSES, type ShipmentStatus } from "@/lib/domain/fulfillment";
 import { logError } from "@/lib/log";
@@ -125,4 +125,9 @@ export async function updateOrderAction(_prev: ActionState, formData: FormData):
       note: String(formData.get("note") ?? ""),
     }),
   );
+}
+
+/** Records a payment the team collected directly from the customer. */
+export async function markPaidAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  return attempt("admin.markPaid", () => markOrderPaid(String(formData.get("id") ?? "")));
 }

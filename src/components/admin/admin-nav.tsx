@@ -9,7 +9,7 @@ const TABS = [
   { href: "/admin/products", label: "Products" },
 ] as const;
 
-export function AdminNav() {
+export function AdminNav({ ordersBadge }: { ordersBadge?: React.ReactNode }) {
   const pathname = usePathname();
   return (
     <>
@@ -21,6 +21,7 @@ export function AdminNav() {
             className={`flex h-11 items-center border-b-2 px-3 whitespace-nowrap transition-colors sm:h-14 ${active ? "border-ink font-medium" : "border-transparent text-ink-soft hover:text-ink"}`}
           >
             {tab.label}
+            {tab.href === "/admin/orders" && ordersBadge}
           </Link>
         );
       })}

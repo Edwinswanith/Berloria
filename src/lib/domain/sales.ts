@@ -4,7 +4,7 @@ export interface SaleRecord {
   /** Paise. */
   total: number;
   cancelled: boolean;
-  /** Online orders only count once paid; cash-on-delivery orders count when placed. */
+  /** Online orders only count once paid; orders paid by arrangement count when placed. */
   awaitingOnlinePayment: boolean;
   lines: readonly { title: string; quantity: number; lineTotal: number }[];
 }

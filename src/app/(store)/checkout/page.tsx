@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { requireCustomerId } from "@/lib/auth/customer";
-import { STORE } from "@/lib/config/store";
 import { getCustomer } from "@/lib/shop/accounts";
 
 export const metadata: Metadata = { title: "Checkout", robots: { index: false } };
@@ -22,5 +21,5 @@ export default function CheckoutPage() {
 
 async function SignedInCheckout() {
   const customer = await getCustomer(await requireCustomerId("/checkout"));
-  return <CheckoutForm codLimit={STORE.codLimit} customer={{ name: customer?.name ?? "", email: customer?.email ?? "" }} />;
+  return <CheckoutForm customer={{ name: customer?.name ?? "", email: customer?.email ?? "" }} />;
 }
